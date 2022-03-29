@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Crud Application</title>
+    <link href="index.css" rel="stylesheet" />
+</head>
+<body>
+    <!-- Form  -->
+    <div id="form">
+        <h1 id="header">Crud Application</h1>
+        <form method="post" id="stdForm">
+            <input type="text" name="stdId" id="stdId" style="display: none;" />
+            <label for="stdName">Student Name</label>
+            <input type="text" name="stdName" id="stdName" placeholder="Student Name" />
+            <label for="stdUsername">Username</label>
+            <input type="text" name="stdUsername" id="stdUsername" placeholder="Username" />
+            <label for="stdEmail">Email</label>
+            <input type="text" name="stdEmail" id="stdEmail" placeholder="Email" />
+            <input type="button" name="addStudent" id="add" value="Add" />
+            <input type="button" name="updateStudent" id="UpdateStd" value="Update" style="display: none;" />
+        </form>
+    </div>
+    <!-- Data Table of All Records -->
+    <div style="width: 50%; margin: 0px 25% 5px 25%">
+        <h1 id="tableHeader">All Records</h1>
+        <table id="student">
+            <thead>
+                <tr>
+                    <th>Student Id</th>
+                    <th>Student Name</th>
+                    <th>Username</th>
+                    <th>Student Email</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</body>
+</html>
+<!-- AJAX CDN -->
+<!-- Data Table CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<link href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css" rel="stylesheet" type="text/css" />
+<script>
+    $(document).ready(function () {
+        GetAllRecords();
+        //$('#student').DataTable();
+
+    });
+    //Add Data AJAX Call
+    $('#add').click(function () {
+        $.ajax({
+            url: "../Handler.ashx?class=AddCrudForm&action=add",
+            type: "post",
+            data: {
+                stdName: $('#stdName').val(),
+                stdUsername: $('#stdUsername').val(),
+                stdEmail: $('#stdEmail').val()
+            },
+            success: function (result) {
+
+                alert(result);
+                $('#content').html(result);
+            },
+            error: function (data) {
+                alert(data.statusText);
+            }
+        });
+    })
+    //Update Data AJAX 
+    $('#UpdateStd').click(function () {
+        $.ajax({
+            url: "../Handler.ashx?class=updateData&action=update",
+            type: "post",
+            data: {
+                id: $('#stdId').val(),
+                stdName: $('#stdName').val(),
+                stdUsername: $('#stdUsername').val(),
+                stdEmail: $('#stdEmail').val()
+            },
+            success: function (result) {
+
+                alert(result);
+                $('#stdForm')[0].reset();
+                $('#UpdateStd').hide();
+                $('#add').show();
+
+            },
+            error: function (data) {
+                alert(data.statusText);
+            }
+        });
+    })
+
+    //Edit Id Call
+    function Edit(id) {
+        $.ajax({
+
+            url: "../Handler.ashx?class=EditCrudForm&action=EditForm&ID=" + id,
+            type: "post",
+            data: {
+                stdName: $('#stdName').val(),
+                stdUsername: $('#stdUsername').val(),
+                stdEmail: $('#stdEmail').val()
+            },
+            success: function (result) {
+                $('#add').hide();
+                /*$('#stdId').show();*/
+                $('#UpdateStd').show();
+                var data = [];
+                data = JSON.parse(result);
+
+                $('#stdId').val(data.id);
+                $('#stdName').val(data.stdName);
+                $('#stdUsername').val(data.stdUsername);
+
+                $('#stdEmail').val(data.stdEmail);
+                alert(result);
+
+                $('#content').html(result);
+            },
+            error: function (data) {
+                alert(data.statusText);
+            }
+        });
+    }
+    //Delete through Id AJAX Call
+    function Delete(id) {
+        alert("Are You Sure, you want to delete the Record!");
+        $.ajax({
+
+            url: "../Handler.ashx?class=DeleteRecord&action=Delete&ID=" + id,
+            type: "post",
+
+            success: function (result) {
+                $('#add').show();
+                /*$('#stdId').show();*/
+                $('#UpdateStd').hide();
+
+                alert(result);
+
+                $('#content').html(result);
+            },
+            error: function (data) {
+                alert(data.statusText);
+            }
+        });
+    }
+    //All Records AJAX Call
+    function GetAllRecords() {
+        $.ajax({
+            url: "../Handler.ashx?class=AddCrudForm&action=read",
+            type: "get",
+
+            success: function (result) {
+
+                OnSuccess(result);
+
+
+            },
+            error: function (data) {
+                alert(data.statusText);
+            }
+        });
+    }
+    //Successs function for data table data
+    function OnSuccess(response) {
+        var dataset = [];
+        dataset = JSON.parse(response);
+
+
+        $("#student").DataTable(
+            {
+                data: dataset,
+                "columns": [{ "data": "id" },
+                { "data": "stdName" },
+                { "data": "stdUsername" },
+                { "data": "stdEmail" },
+                {
+                    "render": function (data, type, full, meta) { return '<div><a href="" id="edit" class="btn-edit" onclick="Edit(' + full.id + ')" style="margin-right:20px; margin-top:30px; margin-bottom: 30px;">Edit</a><a href="" class="btn-danger" id="update" onclick="Delete(' + full.id + ')">Delete</a></div>'; }
+                }
+                ]
+
+            });
+
+    };
+</script>
